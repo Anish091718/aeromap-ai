@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Projects | AeroMap AI{% endblock %}
+{% block content %}
+<h2>📁 Projects</h2>
+<div class="card">
+  <h3>Create new project</h3>
+  <form method="post">
+    <label>Project name</label><input type="text" name="project_name" placeholder="Enter project name" required>
+    <label>Location</label><input type="text" name="location" placeholder="Enter location" required>
+    <label>Description</label><textarea name="description" rows="3" placeholder="Project description"></textarea>
+    <button class="btn" type="submit">➕ Create Project</button>
+  </form>
+</div>
+<div class="card">
+  <h3>All projects</h3>
+  <table>
+    <tr><th>ID</th><th>Project name</th><th>Location</th><th>Created</th><th>Action</th></tr>
+    {% for p in projects %}
+    <tr><td>{{ p[0] }}</td><td>{{ p[1] }}</td><td>{{ p[2] }}</td><td>{{ p[3] }}</td>
+    <td><a class="btn green small" href="/project/{{ p[0] }}">Open</a>
+        <a class="btn red small" href="/delete_project/{{ p[0] }}" onclick="return confirm('Project aur uski saari files delete ho jayengi. Pakka?')">Delete</a></td></tr>
+    {% else %}<tr><td colspan="5">Koi project nahi.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

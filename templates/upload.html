@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Upload Images | AeroMap AI{% endblock %}
+{% block content %}
+<h2>📷 Upload Images</h2>
+<div class="note">Ye general upload page hai. Kisi project ke liye images upload karni ho to <a href="/projects">Projects</a> me project kholo.</div>
+<div class="card">
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="images" multiple accept="image/*" required>
+    <button class="btn" type="submit">Upload</button>
+  </form>
+</div>
+<div class="card">
+  {% if images %}
+  <div class="thumbs">
+    {% for img in images %}
+    <div><img loading="lazy" src="{{ url_for('static', filename='uploads/' + img) }}" alt="">
+      <p>{{ img }}<br><a href="/delete/{{ img }}" onclick="return confirm('Delete?')">Delete</a></p></div>
+    {% endfor %}
+  </div>
+  {% else %}<p>Koi image nahi.</p>{% endif %}
+</div>
+{% endblock %}

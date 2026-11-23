@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ project[1] }} | AeroMap AI{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ project[1] }}</h2>
+  <p>📍 <b>Location:</b> {{ project[2] }}<br>
+     📝 <b>Description:</b> {{ project[3] or '--' }}<br>
+     📅 <b>Created:</b> {{ project[4] }}</p>
+  <a class="btn gray" href="/projects">← Back to Projects</a>
+</div>
+
+<div class="grid">
+  <div class="card stat"><span>Total images</span><b>{{ image_count }}</b></div>
+  <div class="card stat"><span>Storage used</span><b>{{ total_size }} MB</b></div>
+  <div class="card stat"><span>Processing status</span>
+    <b><span id="status" class="badge {{ project[5] }}">{{ project[5] }}</span></b>
+    <div class="bar"><div id="bar" style="width:{{ project[6] or 0 }}%"></div></div>
+    <span id="pct">{{ project[6] or 0 }}%</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3>📷 Upload drone images</h3>
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="images" multiple accept="image/*" required>
+    <button class="btn" type="submit">Upload Images</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>🗺️ Orthomosaic banao</h3>
+  <p><b>Option A: ODM se (Docker chahiye)</b></p>
+  <a class="btn green" href="/generate/{{ project[0] }}" onclick="return confirm('ODM chalega (Docker chalu hona chahiye). Shuru karein?')">⚙️ Generate with ODM</a>
+
+  <p style="margin-top:22px"><b>Option B: Ready GeoTIFF upload karo (Docker ki zarurat nahi)</b></p>
+  <div class="note">WebODM / Metashape / Pix4D se bani <code>.tif</code> file yaha upload karo. Tiles apne aap ban jayenge.</div>
+  <form method="post" action="/upload-ortho/{{ project[0] }}" enctype="multipart/form-data">
+    <input type="file" name="ortho" accept=".tif,.tiff" required>
+    <button class="btn dark" type="submit">⬆️ Upload Orthomosaic (.tif)</button>
+  </form>
+
+  {% if has_map %}
+  <div class="row" style="margin-top:18px">
+    <a class="btn" href="/map-viewer/{{ project[0] }}">Open Map Viewer</a>
+    <a class="btn gray" href="/orthomosaic/{{ project[0] }}">Orthomosaic details</a>
+    <a class="btn gray" href="/measurements/{{ project[0] }}">Measurements</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>🖼️ Uploaded images</h3>
+  {% if images %}
+  <div class="thumbs">
+    {% for img in images %}
+    <div>
+      <img loading="lazy" src="{{ url_for('static', filename='uploads/project_%d/%s' % (project[0], img[0])) }}" alt="">
+      <p>{{ img[0] }}<br><a href="/delete_image/{{ project[0] }}/{{ img[0] }}" onclick="return confirm('Delete?')">Delete</a></p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}<p>Abhi koi image upload nahi hui.</p>{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pid = {{ project[0] }};
+let lastStatus = "{{ project[5] }}";
+async function poll(){
+  try{
+    const r = await fetch('/status/' + pid); const d = await r.json();
+    document.getElementById('bar').style.width = d.progress + '%';
+    document.getElementById('pct').textContent = d.progress + '%';
+    const s = document.getElementById('status');
+    s.textContent = d.status; s.className = 'badge ' + d.status;
+    if (d.status !== lastStatus && (d.status === 'Completed' || d.status === 'Failed')) { location.reload(); return; }
+    lastStatus = d.status;
+  }catch(e){}
+}
+setInterval(poll, 4000);
+</script>
+{% endblock %}

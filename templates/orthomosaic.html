@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Orthomosaic | AeroMap AI{% endblock %}
+{% block content %}
+<h2>🛰️ Orthomosaic</h2>
+<div class="card">
+  <h3>{{ project[1] }}</h3>
+  <p>📍 {{ project[2] }}<br>📝 {{ project[3] or '--' }}<br>📅 {{ project[4] }}<br>📷 Images: {{ image_count }}</p>
+  <div class="row">
+    <a class="btn" href="/map-viewer/{{ project[0] }}">Open Map Viewer</a>
+    <a class="btn green" href="/orthomosaic-file/{{ project[0] }}">⬇️ Download GeoTIFF</a>
+    <a class="btn gray" href="/project/{{ project[0] }}">Back to project</a>
+  </div>
+</div>
+{% endblock %}

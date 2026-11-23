@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}AeroMap AI{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+<aside class="sidebar">
+  <h1>🚁 AeroMap AI</h1>
+  <a href="/dashboard">📊 Dashboard</a>
+  <a href="/projects">📁 Projects</a>
+  <a href="/upload">📷 Upload Images</a>
+  <a href="/map-viewer">🗺️ Map Viewer</a>
+  <a href="/logout">🚪 Logout{% if session.username %} ({{ session.username }}){% endif %}</a>
+</aside>
+<main class="content">{% block content %}{% endblock %}</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

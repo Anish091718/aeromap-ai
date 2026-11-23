@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Map Viewer | AeroMap AI{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+{% endblock %}
+{% block content %}
+<h2>🗺️ Interactive Drone Map</h2>
+<div class="card">
+  <div class="row">
+    <b>Choose project:</b>
+    <select id="projectSelect" style="max-width:340px">
+      <option value="">-- select --</option>
+      {% for p in projects %}
+      <option value="{{ p[0] }}" {% if selected_project and selected_project[0] == p[0] %}selected{% endif %}>{{ p[1] }} — {{ p[2] }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn small" onclick="openProject()">Open Project Map</button>
+    <a class="btn dark small" href="/3d-viewer">Open 3D Model</a>
+    {% if selected_project %}
+    <a class="btn gray small" href="/measurements/{{ selected_project[0] }}">Measurements</a>
+    <a class="btn gray small" href="/project/{{ selected_project[0] }}">Project page</a>
+    {% endif %}
+  </div>
+  {% if selected_project and not orthomosaic_bounds %}
+  <div class="note">Is project ka orthomosaic abhi ready nahi hai. Project page par jaake GeoTIFF upload karo ya ODM se generate karo.</div>
+  {% endif %}
+  {% if selected_project %}
+  <div class="note">Polygon ya rectangle tool se plot draw karo, naam daalo — area apne aap save ho jayega.</div>
+  {% endif %}
+</div>
+<div id="map"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script>
+function openProject(){
+  const v = document.getElementById('projectSelect').value;
+  location.href = v ? '/map-viewer/' + v : '/map-viewer';
+}
+const PROJECT_ID = {{ selected_project[0] if selected_project else 'null' }};
+const map = L.map('map').setView([22.9, 85.9], 5);
+
+const street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {maxZoom: 22, maxNativeZoom: 19, attribution: '© OpenStreetMap contributors'}).addTo(map);
+const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {maxZoom: 22, maxNativeZoom: 19, attribution: 'Esri World Imagery'});
+const baseLayers = {'Street Map': street, 'Satellite': sat};
+const overlays = {};
+
+{% if tiles_url %}
+const ortho = L.tileLayer("{{ tiles_url }}", {
+  minZoom: {{ min_zoom }}, maxZoom: 23, maxNativeZoom: {{ max_zoom }},
+  attribution: 'AeroMap AI Drone Orthomosaic'
+}).addTo(map);
+overlays['Drone Orthomosaic'] = ortho;
+map.fitBounds({{ orthomosaic_bounds | tojson }});
+{% endif %}
+
+L.control.layers(baseLayers, overlays, {collapsed: false}).addTo(map);
+
+const drawn = new L.FeatureGroup().addTo(map);
+if (PROJECT_ID !== null) {
+  map.addControl(new L.Control.Draw({
+    draw: {polygon: {allowIntersection: false, showArea: true}, rectangle: {}, polyline: false,
+           circle: false, marker: false, circlemarker: false},
+    edit: false
+  }));
+
+  function fmt(a){ return a.toLocaleString(undefined, {maximumFractionDigits: 2}); }
+
+  fetch('/api/measurements/' + PROJECT_ID).then(r => r.json()).then(list => {
+    list.forEach(m => {
+      if (!m.coordinates || m.coordinates.length < 3) return;
+      L.polygon(m.coordinates, {color: '#16a34a', weight: 2})
+        .bindTooltip(m.plot_name + ' — ' + fmt(m.area_sqm) + ' m²').addTo(drawn);
+    });
+  });
+
+  map.on(L.Draw.Event.CREATED, async function(e){
+    const layer = e.layer;
+    const latlngs = layer.getLatLngs()[0];
+    const area = L.GeometryUtil.geodesicArea(latlngs);
+    const name = prompt('Plot name?\nArea: ' + fmt(area) + ' m² (' + fmt(area/10000) + ' ha)');
+    if (!name) return;
+    const coords = latlngs.map(p => [p.lat, p.lng]);
+    const res = await fetch('/save-measurement/' + PROJECT_ID, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({plot_name: name, coordinates: coords, area_sqm: area})
+    });
+    const data = await res.json();
+    if (data.success) {
+      layer.setStyle({color: '#16a34a'});
+      layer.bindTooltip(name + ' — ' + fmt(area) + ' m²').addTo(drawn);
+    } else { alert(data.message); }
+  });
+}
+</script>
+{% endblock %}

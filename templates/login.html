@@ -1,0 +1,13 @@
+{% extends "public.html" %}
+{% block title %}Login | AeroMap AI{% endblock %}
+{% block content %}
+<div class="authbox">
+  <h2>Login</h2>
+  <form method="post">
+    <label>Email</label><input type="email" name="email" required>
+    <label>Password</label><input type="password" name="password" required>
+    <button class="btn" type="submit">Login</button>
+  </form>
+  <p>Account nahi hai? <a href="/signup">Sign up</a></p>
+</div>
+{% endblock %}

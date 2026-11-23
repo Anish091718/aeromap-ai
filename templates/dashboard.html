@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | AeroMap AI{% endblock %}
+{% block content %}
+<h2>📊 Dashboard</h2>
+<div class="grid">
+  <div class="card stat"><span>Projects</span><b>{{ stats.projects }}</b></div>
+  <div class="card stat"><span>Images</span><b>{{ stats.images }}</b></div>
+  <div class="card stat"><span>Completed maps</span><b>{{ stats.completed }}</b></div>
+  <div class="card stat"><span>Measurements</span><b>{{ stats.measurements }}</b></div>
+</div>
+<div class="card">
+  <h3>Recent projects</h3>
+  {% if recent %}
+  <table><tr><th>ID</th><th>Name</th><th>Status</th><th></th></tr>
+  {% for r in recent %}
+  <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td><span class="badge {{ r[2] }}">{{ r[2] }}</span></td>
+  <td><a class="btn small" href="/project/{{ r[0] }}">Open</a></td></tr>
+  {% endfor %}</table>
+  {% else %}<p>Abhi koi project nahi hai. <a href="/projects">Naya banao</a>.</p>{% endif %}
+</div>
+{% endblock %}
