@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Projects - AeroMap AI{% endblock %}
+{% block content %}
+<h1>Projects</h1>
+<div class="card">
+  <h2>New project</h2>
+  <form method="post">
+    <div class="grid cols-2">
+      <div><label for="project_name">Project name</label>
+        <input id="project_name" type="text" name="project_name" required></div>
+      <div><label for="location">Location</label>
+        <input id="location" type="text" name="location"></div>
+    </div>
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="2"></textarea>
+    <p><button class="btn" type="submit">Create project</button></p>
+  </form>
+</div>
+
+{% if projects %}
+<div class="table-wrap"><table>
+  <tr><th>Name</th><th>Location</th><th>Created</th><th></th></tr>
+  {% for p in projects %}
+  <tr>
+    <td><a href="{{ url_for('project_details', project_id=p.id) }}">{{ p.project_name }}</a></td>
+    <td>{{ p.location or '-' }}</td>
+    <td>{{ p.created_at }}</td>
+    <td>
+      <form class="inline" method="post" action="{{ url_for('delete_project', id=p.id) }}"
+            onsubmit="return confirm('Delete this project and all its files?')">
+        <button class="btn danger small" type="submit">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}
+<p class="muted">You have no projects yet. Fill in the form above to create one.</p>
+{% endif %}
+{% endblock %}

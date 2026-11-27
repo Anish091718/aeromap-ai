@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Live drone - AeroMap AI{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block body_class %}fullpage{% endblock %}
+{% block main %}
+<div class="split">
+  <aside class="side">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">Live drone</h2>
+      <span class="badge disconnected" id="status">Disconnected</span>
+    </div>
+    <p class="muted" id="message" style="margin:.3rem 0 0"></p>
+
+    <label for="project-select">Show project map underneath</label>
+    <select id="project-select">
+      <option value="">None</option>
+      {% for p in projects %}
+      <option value="{{ p.id }}" {% if selected_project and selected_project.id == p.id %}selected{% endif %}>{{ p.project_name }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="source">Drone source</label>
+    <select id="source">
+      <option value="simulator">Demo simulator (no drone needed)</option>
+      <option value="mavlink">MAVLink drone / ground station</option>
+      <option value="browser">This device's GPS</option>
+      <option value="http">External app (HTTP API)</option>
+    </select>
+
+    <div id="panel-simulator" class="muted">A virtual drone flies a survey pattern around the centre of the map. Move the map first to choose where.</div>
+
+    <div id="panel-mavlink" class="hidden">
+      <label for="connection">Connection string</label>
+      <input type="text" id="connection" value="udpin:0.0.0.0:14550" spellcheck="false">
+      <p class="muted" style="font-size:.85rem">
+        Mission Planner / QGroundControl forwarding or SITL: <code>udpin:0.0.0.0:14550</code><br>
+        TCP: <code>tcp:127.0.0.1:5760</code><br>
+        Telemetry radio / USB: <code>COM5,57600</code> (Linux: <code>/dev/ttyUSB0,57600</code>)
+      </p>
+    </div>
+
+    <div id="panel-browser" class="hidden muted">Uses the GPS of the device that has this page open. Phones need HTTPS (or localhost) for location access.</div>
+
+    <div id="panel-http" class="hidden">
+      <p class="muted" style="font-size:.85rem">Send JSON from any app or companion computer, about once per second:</p>
+<pre class="code">curl -X POST {{ base_url }}/api/drone/push \
+  -H "X-Drone-Token: {{ token }}" \
+  -H "Content-Type: application/json" \
+  -d '{"lat":23.35,"lon":85.33,"rel_alt":60,"heading":90,"speed":8,"battery":87}'</pre>
+      <p class="muted" style="font-size:.85rem">Fields: <code>lat</code>, <code>lon</code> (required), <code>alt</code>, <code>rel_alt</code>, <code>heading</code>, <code>speed</code>, <code>battery</code>, <code>voltage</code>, <code>sats</code>, <code>mode</code>, <code>armed</code>. Keep the token private.</p>
+    </div>
+
+    <div class="row" style="margin:1rem 0">
+      <button class="btn flight" id="btn-connect">Connect</button>
+      <button class="btn secondary" id="btn-disconnect">Disconnect</button>
+    </div>
+
+    <div class="telemetry">
+      <div><small>Latitude</small><b data-f="lat">-</b></div>
+      <div><small>Longitude</small><b data-f="lon">-</b></div>
+      <div><small>Height above takeoff (m)</small><b data-f="rel_alt">-</b></div>
+      <div><small>Altitude MSL (m)</small><b data-f="alt">-</b></div>
+      <div><small>Ground speed</small><b data-f="speed">-</b></div>
+      <div><small>Heading</small><b data-f="heading">-</b></div>
+      <div><small>Battery</small><b data-f="battery">-</b></div>
+      <div><small>Satellites</small><b data-f="sats">-</b></div>
+      <div><small>Mode</small><b data-f="mode">-</b></div>
+      <div><small>Distance flown</small><b id="distance">-</b></div>
+    </div>
+
+    <div class="row" style="margin-top:1rem">
+      <label style="margin:0;font-weight:400"><input type="checkbox" id="follow" checked> Follow drone</label>
+      <button class="btn secondary small" id="btn-clear">Clear path</button>
+      <a class="btn secondary small" href="{{ url_for('drone_track_geojson') }}">Download path</a>
+      <a class="btn secondary small" href="{{ url_for('viewer_3d') }}">3D view</a>
+    </div>
+  </aside>
+  <div class="mapbox"><div id="map"></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>window.LIVE_CFG = {{ cfg|tojson }};</script>
+<script src="{{ url_for('static', filename='js/live.js') }}"></script>
+{% endblock %}

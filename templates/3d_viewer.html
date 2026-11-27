@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}3D flight view - AeroMap AI{% endblock %}
+{% block body_class %}fullpage{% endblock %}
+{% block main %}
+<div class="split">
+  <aside class="side">
+    <h2>3D flight view</h2>
+    <p class="muted">Your live drone path in 3D. Drag to rotate, scroll or pinch to zoom. Start a flight on the <a href="{{ url_for('live_view') }}">Live drone</a> page.</p>
+    <div class="telemetry">
+      <div><small>Status</small><b id="st">-</b></div>
+      <div><small>Points</small><b id="pts">0</b></div>
+      <div><small>Height (m)</small><b id="h">-</b></div>
+      <div><small>Distance (m)</small><b id="dist">-</b></div>
+    </div>
+    <div class="row" style="margin-top:1rem">
+      <button class="btn secondary small" id="reset-view">Reset view</button>
+    </div>
+    <p class="muted" style="font-size:.85rem">Grid squares are 10 m. Orange line is the path, the vertical line shows the drone's height above the ground.</p>
+  </aside>
+  <div class="mapbox"><canvas id="view3d"></canvas></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/view3d.js') }}"></script>{% endblock %}

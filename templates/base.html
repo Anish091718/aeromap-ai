@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AeroMap AI{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="nav">
+    <a class="brand" href="{{ url_for('home') }}">AeroMap AI</a>
+    {% if session.user_id %}
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('projects') }}">Projects</a>
+      <a href="{{ url_for('map_viewer') }}">Map viewer</a>
+      <a class="live-link" href="{{ url_for('live_view') }}">Live drone</a>
+      <a href="{{ url_for('viewer_3d') }}">3D flight view</a>
+      <span class="spacer"></span>
+      <span class="muted">{{ session.username }}</span>
+      <a href="{{ url_for('logout') }}">Log out</a>
+    {% else %}
+      <span class="spacer"></span>
+      <a href="{{ url_for('login') }}">Log in</a>
+      <a href="{{ url_for('signup') }}">Sign up</a>
+    {% endif %}
+  </header>
+  {% block main %}<main class="container">{% block content %}{% endblock %}</main>{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - AeroMap AI{% endblock %}
+{% block content %}
+<h1>Welcome, {{ session.username }}</h1>
+<div class="grid cols-4">
+  <div class="card stat"><b>{{ stats.projects }}</b>Projects</div>
+  <div class="card stat"><b>{{ stats.images }}</b>Images uploaded</div>
+  <div class="card stat"><b>{{ stats.completed }}</b>Maps completed</div>
+  <div class="card stat"><b>{{ stats.measurements }}</b>Measurements</div>
+</div>
+
+<div class="row" style="margin:.5rem 0 1.2rem">
+  <a class="btn" href="{{ url_for('projects') }}">New project</a>
+  <a class="btn flight" href="{{ url_for('live_view') }}">Watch drone live</a>
+</div>
+
+<h2>Recent projects</h2>
+{% if recent %}
+<div class="table-wrap"><table>
+  <tr><th>Name</th><th>Status</th><th></th></tr>
+  {% for p in recent %}
+  <tr>
+    <td>{{ p.project_name }}</td>
+    <td><span class="badge {{ p.status }}">{{ p.status }}</span></td>
+    <td><a href="{{ url_for('project_details', project_id=p.id) }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}
+<p class="muted">No projects yet. Create your first project to start uploading drone images.</p>
+{% endif %}
+{% endblock %}

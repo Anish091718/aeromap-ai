@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ project.project_name }} - AeroMap AI{% endblock %}
+{% block content %}
+<div class="row" style="justify-content:space-between">
+  <h1>{{ project.project_name }}</h1>
+  <span class="badge {{ project.status }}" id="status-badge">{{ project.status }}</span>
+</div>
+<p class="muted">{{ project.location or 'No location' }}{% if project.description %} - {{ project.description }}{% endif %}<br>
+  Created {{ project.created_at }} &middot; {{ image_count }} images &middot; {{ total_size }} MB</p>
+
+<div class="card" id="progress-card"{% if project.status != 'Processing' %} style="display:none"{% endif %}>
+  <strong>Processing...</strong> <span id="pct">{{ project.progress }}%</span>
+  <div class="bar"><i id="bar" style="width:{{ project.progress }}%"></i></div>
+  <p class="muted" style="margin:.5rem 0 0">This can take a long time for large image sets. You can leave this page.</p>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>1. Upload drone images</h2>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="images" multiple accept=".jpg,.jpeg,.png,.jfif,.tif,.tiff" required>
+      <p><button class="btn" type="submit">Upload images</button></p>
+    </form>
+  </div>
+  <div class="card">
+    <h2>2. Create the orthomosaic</h2>
+    <form method="post" action="{{ url_for('generate_orthomosaic', project_id=project.id) }}">
+      <button class="btn" type="submit" {% if image_count < 2 or project.status == 'Processing' %}disabled{% endif %}>Generate with ODM (Docker)</button>
+      {% if image_count < 2 %}<span class="muted">Upload at least 2 images first.</span>{% endif %}
+    </form>
+    <p class="muted">Or upload a ready GeoTIFF made in WebODM or Metashape:</p>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_ortho', project_id=project.id) }}">
+      <input type="file" name="ortho" accept=".tif,.tiff" required>
+      <p><button class="btn secondary" type="submit" {% if project.status == 'Processing' %}disabled{% endif %}>Upload orthomosaic (.tif)</button></p>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Results</h2>
+  <div class="row">
+    {% if has_map %}
+      <a class="btn" href="{{ url_for('map_viewer', project_id=project.id) }}">Open map &amp; measure</a>
+      <a class="btn secondary" href="{{ url_for('orthomosaic', project_id=project.id) }}">Orthomosaic details</a>
+      <a class="btn secondary" href="{{ url_for('orthomosaic_file', project_id=project.id) }}">Download GeoTIFF</a>
+    {% else %}
+      <span class="muted">The map is not ready yet.</span>
+    {% endif %}
+    <a class="btn secondary" href="{{ url_for('view_measurements', project_id=project.id) }}">Measurements</a>
+    <a class="btn flight" href="{{ url_for('live_view', project=project.id) }}">Live drone on this map</a>
+  </div>
+</div>
+
+<h2>Images ({{ image_count }})</h2>
+{% if images %}
+<div class="thumbs">
+  {% for img in images %}
+  <div class="thumb">
+    <img loading="lazy" alt="" src="{{ url_for('static', filename='uploads/project_' ~ project.id ~ '/' ~ img.image_name) }}" onerror="this.style.visibility='hidden'">
+    {{ img.image_name }}
+    <form method="post" action="{{ url_for('delete_project_image', project_id=project.id, filename=img.image_name) }}">
+      <button class="btn danger small" type="submit">Remove</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No images yet. Upload your drone photos above.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if project.status == 'Processing' %}
+<script>
+(function poll(){
+  fetch("{{ url_for('project_status', project_id=project.id) }}").then(r => r.json()).then(d => {
+    document.getElementById('bar').style.width = d.progress + '%';
+    document.getElementById('pct').textContent = d.progress + '%';
+    if (d.status === 'Processing') { setTimeout(poll, 2000); } else { location.reload(); }
+  }).catch(() => setTimeout(poll, 4000));
+})();
+</script>
+{% endif %}
+{% endblock %}

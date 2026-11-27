@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Orthomosaic - {{ project.project_name }}{% endblock %}
+{% block content %}
+<h1>Orthomosaic: {{ project.project_name }}</h1>
+<div class="card">
+  <p>{{ project.location or 'No location' }}<br>
+     <span class="muted">Created {{ project.created_at }} &middot; {{ image_count }} source images</span></p>
+  <div class="row">
+    <a class="btn" href="{{ url_for('map_viewer', project_id=project.id) }}">View on map</a>
+    <a class="btn secondary" href="{{ url_for('orthomosaic_file', project_id=project.id) }}">Download GeoTIFF</a>
+    <a class="btn secondary" href="{{ url_for('project_details', project_id=project.id) }}">Back to project</a>
+  </div>
+</div>
+{% endblock %}

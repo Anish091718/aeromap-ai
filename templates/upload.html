@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Upload - AeroMap AI{% endblock %}
+{% block content %}
+<h1>Quick image upload</h1>
+<p class="muted">For organised work, upload images inside a <a href="{{ url_for('projects') }}">project</a> instead.</p>
+<div class="card">
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="images" multiple accept=".jpg,.jpeg,.png,.jfif,.tif,.tiff" required>
+    <p><button class="btn" type="submit">Upload</button></p>
+  </form>
+</div>
+{% if images %}
+<div class="thumbs">
+  {% for name in images %}
+  <div class="thumb">
+    <img loading="lazy" alt="" src="{{ url_for('static', filename='uploads/user_' ~ session.user_id ~ '/' ~ name) }}" onerror="this.style.visibility='hidden'">
+    {{ name }}
+    <form method="post" action="{{ url_for('delete_image', filename=name) }}">
+      <button class="btn danger small" type="submit">Remove</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No images uploaded yet.</p>
+{% endif %}
+{% endblock %}

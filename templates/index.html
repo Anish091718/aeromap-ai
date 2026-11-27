@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Turn drone photos into a measurable map.</h1>
+  <p class="muted">Upload your images, build an orthomosaic, measure plot areas, export reports, and watch your drone fly live on the map.</p>
+  <div class="row">
+    {% if session.user_id %}
+      <a class="btn" href="{{ url_for('dashboard') }}">Open dashboard</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('signup') }}">Create an account</a>
+      <a class="btn secondary" href="{{ url_for('login') }}">Log in</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
